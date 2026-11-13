@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Waibhav</title>
+  <link rel="stylesheet" href="style.css?v=5" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js?v=7" defer></script>
+</head>
+<body>
+  <main id="authScreen" class="auth-screen">
+    <section class="auth-card">
+      <div class="brand-mark">✦</div>
+      <h1>Waibhav</h1>
+      <p class="muted">A little closer, wherever you are.</p>
+      
+      <div class="auth-tabs">
+        <button id="showGuest" class="tab active" type="button">Quick Guest</button>
+        <button id="showLogin" class="tab" type="button">Log in</button>
+        <button id="showSignup" class="tab" type="button">Sign up</button>
+      </div>
+
+      <form id="authForm">
+        <label id="nameLabel" for="displayName">Your name</label>
+        <input id="displayName" type="text" placeholder="Enter a unique display name" maxlength="40" required />
+
+        <div id="emailPasswordGroup" class="hidden">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="At least 6 characters" minlength="6" autocomplete="current-password" />
+        </div>
+
+        <div id="captchaGroup" class="captcha-box">
+          <label for="captchaInput">Security Check</label>
+          <div class="captcha-row">
+            <span id="captchaQuestion" class="captcha-challenge">3 + 4 = ?</span>
+            <button id="refreshCaptcha" type="button" class="icon-btn captcha-refresh" title="New Captcha">↻</button>
+          </div>
+          <input id="captchaInput" type="number" placeholder="Enter answer" required />
+        </div>
+
+        <button id="authSubmit" class="primary-btn" type="submit">Join as Guest</button>
+      </form>
+      <p id="authMessage" class="notice" role="status"></p>
+      
+      <footer class="auth-footer">
+        <button id="termsBtn" type="button" class="legal-link">Terms &amp; Conditions</button>
+        <span class="legal-sep">•</span>
+        <button id="privacyBtn" type="button" class="legal-link">Privacy Policy</button>
+      </footer>
+    </section>
+  </main>
+
+  <main id="chatScreen" class="chat-app hidden">
+    <aside id="sidebar" class="sidebar">
+      <header class="sidebar-header">
+        <div>
+          <div class="brand-small">✦ Waibhav</div>
+          <p class="muted tiny">Your people, in one place</p>
+        </div>
+        <button id="logoutBtn" class="icon-btn" title="Log out" aria-label="Log out">↪</button>
+      </header>
+
+      <section class="my-profile">
+        <img id="myAvatar" class="avatar large" alt="Your profile picture" />
+        <div class="profile-copy">
+          <strong id="myName">Your profile</strong>
+          <span class="online-label"><i class="dot"></i> You are online</span>
+        </div>
+        <label class="edit-avatar" for="avatarInput" title="Change profile picture">✎</label>
+        <input id="avatarInput" type="file" accept="image/*" class="hidden" />
+      </section>
+
+      <!-- 24-Hour Stories Strip -->
+      <section class="stories-section">
+        <div id="storiesStrip" class="stories-strip">
+          <button id="addStoryBtn" class="story-item add-story" type="button" title="Add 24h Story">
+            <div class="story-ring add-ring">
+              <span>+</span>
+            </div>
+            <span class="story-name">Your Story</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Four Sidebar Navigation Tabs: Chats | Rooms | Requests | Users -->
+      <div class="sidebar-tabs">
+        <button id="tabChats" class="sidebar-tab active" type="button">Chats</button>
+        <button id="tabRooms" class="sidebar-tab" type="button">Rooms</button>
+        <button id="tabRequests" class="sidebar-tab" type="button">
+          Requests <span id="requestCountBadge" class="tab-badge alert hidden">0</span>
+        </button>
+        <button id="tabAllUsers" class="sidebar-tab" type="button">Users</button>
+      </div>
+
+      <!-- Search Bar & Create Room Action -->
+      <div id="searchContainer" class="search-box">
+        <input id="userSearchInput" type="text" placeholder="Search people by name..." autocomplete="off" />
+        <button id="userSearchBtn" class="icon-btn search-btn" type="button" title="Search">🔍</button>
+        <button id="openCreateRoomBtn" class="icon-btn create-room-btn hidden" type="button" title="Create Group / Room">+</button>
+      </div>
+
+      <!-- Accepted 1-on-1 Chats List -->
+      <div id="chatUserList" class="user-list">
+        <p class="empty-hint">No active chats yet. Go to Users to send a request!</p>
+      </div>
+
+      <!-- Group Chats & Public Rooms List -->
+      <div id="roomsList" class="user-list hidden">
+        <p class="empty-hint">No rooms yet. Click + to create a hangout room!</p>
+      </div>
+
+      <!-- Request Inbox & Sent Requests List -->
+      <div id="requestList" class="user-list hidden">
+        <p class="empty-hint">No pending chat requests.</p>
+      </div>
+
+      <!-- Unconnected Users Directory List -->
+      <div id="allUsersList" class="user-list hidden">
+        <p class="empty-hint">No new users found.</p>
+      </div>
+
+      <footer class="sidebar-footer">
+        <button id="termsBtnSidebar" type="button" class="legal-link">Terms</button>
+        <span>•</span>
+        <button id="privacyBtnSidebar" type="button" class="legal-link">Privacy</button>
+      </footer>
+    </aside>
+
+    <section id="conversation" class="conversation">
+      <div id="welcomePanel" class="welcome-panel">
+        <div class="welcome-icon">💬</div>
+        <h2>Welcome to Waibhav</h2>
+        <p>Choose a friend or join a room to start chatting.</p>
+      </div>
+
+      <div id="conversationPanel" class="conversation-panel hidden">
+        <header class="conversation-header">
+          <button id="backToListBtn" class="icon-btn mobile-back-btn" title="Back" aria-label="Back">←</button>
+          <img id="activeAvatar" class="avatar" alt="" />
+          <div class="conversation-person">
+            <strong id="activeName">User</strong>
+            <span id="activeStatus" class="muted tiny">Offline</span>
+          </div>
+          <!-- Audio & Video Call Buttons (1-on-1 Accepted Chats Only) -->
+          <div id="callHeaderActions" class="call-header-actions hidden">
+            <button id="audioCallBtn" class="icon-btn call-action-btn" type="button" title="Start Audio Call">📞</button>
+            <button id="videoCallBtn" class="icon-btn call-action-btn" type="button" title="Start Video Call">📹</button>
+          </div>
+          <!-- Leave Room Button (Rooms Only) -->
+          <div id="roomHeaderActions" class="call-header-actions hidden">
+            <button id="leaveRoomBtn" class="req-btn req-decline" type="button" title="Leave Room">Leave</button>
+          </div>
+        </header>
+
+        <div id="typingBanner" class="typing-banner hidden">
+          <span id="typingText">typing...</span>
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div id="messages" class="messages">
+          <p class="empty-hint">Say hello 👋</p>
+        </div>
+        <form id="messageForm" class="message-form">
+          <label for="chatPhotoInput" class="icon-btn attach-btn" title="Send a photo">📷</label>
+          <input id="chatPhotoInput" type="file" accept="image/*" class="hidden" />
+          <input id="messageInput" type="text" maxlength="4000" placeholder="Write a message..." autocomplete="off" />
+          <button class="send-btn" type="submit" aria-label="Send message">➤</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Create Story Modal -->
+  <div id="createStoryModal" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2>Post 24-Hour Story</h2>
+        <button id="closeCreateStory" class="close-btn" type="button">&times;</button>
+      </header>
+      <form id="storyForm" class="modal-body">
+        <p class="muted tiny" style="margin-top:0;">Visible to your accepted friends for 24 hours.</p>
+        <label for="storyText">Text Status (optional if uploading photo)</label>
+        <textarea id="storyText" rows="3" maxlength="240" placeholder="What's on your mind?"></textarea>
+
+        <label for="storyImageInput">Photo (optional)</label>
+        <input id="storyImageInput" type="file" accept="image/*" />
+
+        <label>Background Theme (for text stories)</label>
+        <div class="story-color-picker">
+          <button type="button" class="color-swatch active" data-bg="linear-gradient(135deg, #7558f5, #ff77ad)" style="background: linear-gradient(135deg, #7558f5, #ff77ad);"></button>
+          <button type="button" class="color-swatch" data-bg="linear-gradient(135deg, #11998e, #38ef7d)" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></button>
+          <button type="button" class="color-swatch" data-bg="linear-gradient(135deg, #fc4a1a, #f7b733)" style="background: linear-gradient(135deg, #fc4a1a, #f7b733);"></button>
+          <button type="button" class="color-swatch" data-bg="linear-gradient(135deg, #141e30, #243b55)" style="background: linear-gradient(135deg, #141e30, #243b55);"></button>
+        </div>
+
+        <button id="publishStoryBtn" class="primary-btn" type="submit">Share Story ✨</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Fullscreen Story Viewer Modal -->
+  <div id="storyViewerModal" class="story-viewer-overlay hidden">
+    <div class="story-viewer-card" id="storyViewerCard">
+      <div class="story-progress-bar" id="storyProgressBars"></div>
+      <div class="story-viewer-header">
+        <img id="viewerUserAvatar" class="avatar" alt="" />
+        <div class="story-viewer-meta">
+          <strong id="viewerUserName">User</strong>
+          <span id="viewerTime">Just now</span>
+        </div>
+        <button id="deleteStoryBtn" class="icon-btn story-del-btn hidden" type="button" title="Delete Story">🗑</button>
+        <button id="closeStoryViewer" class="close-btn story-close-btn" type="button">&times;</button>
+      </div>
+      <div class="story-viewer-content" id="storyViewerContent">
+        <img id="viewerImage" class="story-viewer-img hidden" alt="" />
+        <p id="viewerCaption" class="story-viewer-caption"></p>
+      </div>
+      <button id="prevStoryBtn" class="story-nav prev" type="button" aria-label="Previous">‹</button>
+      <button id="nextStoryBtn" class="story-nav next" type="button" aria-label="Next">›</button>
+    </div>
+  </div>
+
+  <!-- Create Group / Hangout Room Modal -->
+  <div id="createRoomModal" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2>Create Hangout Room</h2>
+        <button id="closeCreateRoom" class="close-btn" type="button">&times;</button>
+      </header>
+      <form id="createRoomForm" class="modal-body">
+        <label for="roomNameInput">Room Name</label>
+        <input id="roomNameInput" type="text" maxlength="45" placeholder="e.g., Late Night Coders, Music Lounge" required />
+
+        <label for="roomDescInput">Topic / Description</label>
+        <input id="roomDescInput" type="text" maxlength="100" placeholder="What is this room about?" />
+
+        <button id="submitCreateRoomBtn" class="primary-btn" type="submit">Create &amp; Join Room</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Incoming Call Modal -->
+  <div id="incomingCallModal" class="modal-overlay hidden" aria-hidden="true">
+    <div class="incoming-call-card">
+      <div class="incoming-ring-pulse">
+        <img id="incomingCallerAvatar" class="incoming-avatar" alt="Caller" />
+      </div>
+      <h2 id="incomingCallerName">Someone</h2>
+      <p id="incomingCallType" class="muted">Incoming Video Call...</p>
+      <div class="incoming-call-buttons">
+        <button id="declineCallBtn" class="call-circle-btn decline" type="button" title="Decline">✕</button>
+        <button id="acceptCallBtn" class="call-circle-btn accept" type="button" title="Accept">📞</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Audio/Video Call Overlay -->
+  <div id="callOverlay" class="call-overlay hidden">
+    <div class="call-stage">
+      <video id="remoteVideo" class="remote-video" autoplay playsinline></video>
+      <div id="audioCallAvatarStage" class="audio-call-stage">
+        <img id="callPeerAvatar" class="call-peer-avatar" alt="" />
+        <h2 id="callPeerName">User</h2>
+        <span id="callStatusText" class="call-status-pill">Calling...</span>
+      </div>
+      <div class="call-top-bar">
+        <span id="callTimer" class="call-timer">00:00</span>
+      </div>
+      <video id="localVideo" class="local-video hidden" autoplay muted playsinline></video>
+      <div class="call-controls-bar">
+        <button id="toggleMicBtn" class="call-control-btn" type="button" title="Mute / Unmute">🎤</button>
+        <button id="toggleCamBtn" class="call-control-btn" type="button" title="Toggle Camera">📷</button>
+        <button id="hangupCallBtn" class="call-control-btn end-call" type="button" title="End Call">📵</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- Terms Modal -->
+  <div id="termsModal" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2>Terms &amp; Conditions</h2>
+        <button id="closeTerms" class="close-btn" type="button">&times;</button>
+      </header>
+      <div class="modal-body">
+        <p>Welcome to <strong>Waibhav</strong>. By creating an account or joining as a guest, you agree to comply with the following terms:</p>
+        <h3>1. Usage Guidelines</h3>
+        <p>Waibhav is designed for respectful messaging, stories, rooms, and calls. Harassment, hateful speech, spam, or abusive behavior is prohibited.</p>
+        <h3>2. Account Security</h3>
+        <p>Guest sessions are temporary browser sessions. Registered accounts maintain persistent history.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Policy Modal -->
+  <div id="privacyModal" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2>Privacy Policy</h2>
+        <button id="closePrivacy" class="close-btn" type="button">&times;</button>
+      </header>
+      <div class="modal-body">
+        <p>At <strong>Waibhav</strong>, we prioritize your privacy and data security.</p>
+        <h3>1. Information We Collect</h3>
+        <p>We collect your display name, profile avatar, stories, and messages required to power your messaging experience.</p>
+        <h3>2. Data Usage &amp; Security</h3>
+        <p>Your data is securely managed using Supabase infrastructure with Row Level Security (RLS).</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
